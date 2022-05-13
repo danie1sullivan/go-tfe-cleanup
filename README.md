@@ -2,9 +2,8 @@
 
 I often find Terraform Cloud workspaces are "stuck" because:
 
-```
-Note: Runs initiated in your workspace as the result of a run trigger connection to a source workspace will not auto-apply, regardless of your auto-apply setting selection. You will need to manually apply these runs.
-```
+> Note: Runs initiated in your workspace as the result of a run trigger connection to a source workspace will not auto-apply, regardless of your auto-apply setting selection. You will need to manually apply these runs.
+
 --[source](https://www.terraform.io/cloud-docs/workspaces/settings/run-triggers#creating-a-run-trigger)
 
 ## Usage
