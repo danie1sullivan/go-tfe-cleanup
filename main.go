@@ -39,6 +39,7 @@ const SKIP = "Skip"
 func main() {
 	org := flag.String("org", "", "Terraform Cloud organization name")
 	search := flag.String("search", "", "Workspace search term")
+	noop := flag.Bool("noop", false, "Do not perform any action, only show what would happen")
 	flag.Parse()
 
 	if *org == "" {
@@ -50,6 +51,10 @@ func main() {
 	if token == "" {
 		fmt.Println("Environment variable TFE_TOKEN not found")
 		os.Exit(1)
+	}
+
+	if *noop {
+		log.Println("noop=true,message=no action will be taken")
 	}
 
 	client, err := newClient(token)
@@ -71,18 +76,18 @@ func main() {
 				// configured to auto-apply
 				case tfe.RunCostEstimated:
 					if ws.AutoApply {
-						client.RunAction(ctx, APPLY, run.ID, ws.Name)
+						client.RunAction(ctx, APPLY, run.ID, ws.Name, *noop)
 					}
 				// this run will be triggered automatically
 				case tfe.RunPending:
-					client.RunAction(ctx, SKIP, run.ID, ws.Name)
+					client.RunAction(ctx, SKIP, run.ID, ws.Name, *noop)
 				}
 			} else {
 				switch run.Status {
 				case tfe.RunCostEstimated:
-					client.RunAction(ctx, DISCARD, run.ID, ws.Name)
+					client.RunAction(ctx, DISCARD, run.ID, ws.Name, *noop)
 				case tfe.RunPending:
-					client.RunAction(ctx, CANCEL, run.ID, ws.Name)
+					client.RunAction(ctx, CANCEL, run.ID, ws.Name, *noop)
 				}
 			}
 		}
@@ -177,8 +182,12 @@ func (c *Client) ListWorkspacesWithRunStatus(ctx context.Context, org string, se
 	}
 }
 
-func (c *Client) RunAction(ctx context.Context, action string, runID string, workspace_name string) error {
+func (c *Client) RunAction(ctx context.Context, action string, runID string, workspace_name string, noop bool) error {
 	log.Printf("run_id=%s,workspace_name=%s,action=%s", runID, workspace_name, strings.ToLower(action))
+
+	if noop {
+		return nil
+	}
 
 	comment := fmt.Sprintf("%sing run automatically", action)
 	switch action {
